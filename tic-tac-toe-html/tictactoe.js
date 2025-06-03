@@ -1,0 +1,210 @@
+//proměné
+var gamemode ="";
+var turn = "";
+var player1 = "X";
+var player2 = "O";
+var player1cells = [];
+var player2cells = [];
+var freeCells = ["cell0", "cell1", "cell2", "cell3", "cell4", "cell5", "cell6", "cell7", "cell8"];
+//funkce
+function singleplayer(){
+    document.getElementById("gameSelector").style.display = "none";
+    document.getElementById("gameContainer").style.display = "flex";
+    gamemode = "singleplayer";
+    turn = player1;
+}
+function localMultiplayer(){
+    document.getElementById("gameSelector").style.display = "none";
+    document.getElementById("gameContainer").style.display = "flex";
+    gamemode = "localMultiplayer";
+    turn = player1;
+}
+function resetGame(){
+    window.location.reload();
+}
+function cellClicked(cell){
+    const cellElement = document.getElementById("cell" + cell);
+    if(gamemode==="singleplayer") {
+        if (cellElement.innerText === "") {
+            cellElement.innerText = turn;
+            freeCells.splice(freeCells.indexOf("cell" + cell), 1);
+            if (turn === player1) {
+                player1cells.push("cell" + cell);
+                cellElement.classList.add("player1");
+            } else {
+                player2cells.push("cell" + cell);
+                cellElement.classList.add("player2");
+            }
+            if(checkWin()){
+                playerWinner();
+            }
+            else if (freeCells.length === 0) {
+                drawGame();
+            }
+            else {
+                turn = (turn === player1) ? player2 : player1;
+                computerMove();
+            }
+        }
+    }
+    else if(gamemode === "localMultiplayer") {
+        if (cellElement.innerText === "") {
+            cellElement.innerText = turn;
+            freeCells.splice(freeCells.indexOf("cell" + cell), 1);
+            if (turn === player1) {
+                player1cells.push("cell" + cell);
+                cellElement.classList.add("player1");
+            } else {
+                player2cells.push("cell" + cell);
+                cellElement.classList.add("player2");
+            }
+            if(checkWin()){
+                playerWinner();
+            }
+            else if (freeCells.length === 0) {
+                drawGame();
+            }
+            else {
+                turn = (turn === player1) ? player2 : player1;
+            }
+        }
+    }
+}
+function computerMove() {
+    if (gamemode === "singleplayer" && turn === player2) {
+        // Speciální případ: pokud je to druhý tah hry a hráč začal rohem, počítač zvolí střed
+        if (player1cells.length === 1 && player2cells.length === 0) {
+            const corners = ["cell0", "cell2", "cell6", "cell8"];
+            if (corners.includes(player1cells[0]) && freeCells.includes("cell4")) {
+                const cellElement = document.getElementById("cell4");
+                cellElement.innerText = turn;
+                freeCells.splice(freeCells.indexOf("cell4"), 1);
+                player2cells.push("cell4");
+                cellElement.classList.add("player2");
+                if (checkWin()) {
+                    playerWinner();
+                } else {
+                    turn = player1;
+                }
+                return;
+            }
+        }
+        // 1. Pokus o výhru
+        for (const combination of [
+            ["cell0", "cell1", "cell2"],
+            ["cell3", "cell4", "cell5"],
+            ["cell6", "cell7", "cell8"],
+            ["cell0", "cell3", "cell6"],
+            ["cell1", "cell4", "cell7"],
+            ["cell2", "cell5", "cell8"],
+            ["cell0", "cell4", "cell8"],
+            ["cell2", "cell4", "cell6"]
+        ]) {
+            const cells = combination.filter(cell => freeCells.includes(cell));
+            const owned = combination.filter(cell => player2cells.includes(cell));
+            if (owned.length === 2 && cells.length === 1) {
+                // Dokonči výherní kombinaci
+                const cell = cells[0];
+                const cellElement = document.getElementById(cell);
+                cellElement.innerText = turn;
+                freeCells.splice(freeCells.indexOf(cell), 1);
+                player2cells.push(cell);
+                cellElement.classList.add("player2");
+                if (checkWin()) {
+                    playerWinner();
+                } else {
+                    turn = player1;
+                }
+                return;
+            }
+        }
+        // 2. Zabránit výhře hráče
+        for (const combination of [
+            ["cell0", "cell1", "cell2"],
+            ["cell3", "cell4", "cell5"],
+            ["cell6", "cell7", "cell8"],
+            ["cell0", "cell3", "cell6"],
+            ["cell1", "cell4", "cell7"],
+            ["cell2", "cell5", "cell8"],
+            ["cell0", "cell4", "cell8"],
+            ["cell2", "cell4", "cell6"]
+        ]) {
+            const cells = combination.filter(cell => freeCells.includes(cell));
+            const owned = combination.filter(cell => player1cells.includes(cell));
+            if (owned.length === 2 && cells.length === 1) {
+                // Zabránit výhře hráče
+                const cell = cells[0];
+                const cellElement = document.getElementById(cell);
+                cellElement.innerText = turn;
+                freeCells.splice(freeCells.indexOf(cell), 1);
+                player2cells.push(cell);
+                cellElement.classList.add("player2");
+                if (checkWin()) {
+                    playerWinner();
+                } else {
+                    turn = player1;
+                }
+                return;
+            }
+        }
+        // 3. Jinak náhodný tah
+        const randomIndex = Math.floor(Math.random() * freeCells.length);
+        const cell = freeCells[randomIndex];
+        const cellElement = document.getElementById(cell);
+        cellElement.innerText = turn;
+        freeCells.splice(randomIndex, 1);
+        player2cells.push(cell);
+        cellElement.classList.add("player2");
+        // Po každém tahu počítače přidejte kontrolu remízy:
+        if (checkWin()) {
+            playerWinner();
+        } else if (freeCells.length === 0) {
+            drawGame();
+        } else {
+            turn = player1;
+        }
+    }
+}
+function checkWin() {
+    const winningCombinations = [
+        ["cell0", "cell1", "cell2"],
+        ["cell3", "cell4", "cell5"],
+        ["cell6", "cell7", "cell8"],
+        ["cell0", "cell3", "cell6"],
+        ["cell1", "cell4", "cell7"],
+        ["cell2", "cell5", "cell8"],
+        ["cell0", "cell4", "cell8"],
+        ["cell2", "cell4", "cell6"]
+    ];
+
+    for (const combination of winningCombinations) {
+        if (player1cells.includes(combination[0]) && player1cells.includes(combination[1]) && player1cells.includes(combination[2])) {
+            return true;
+        }
+        if (player2cells.includes(combination[0]) && player2cells.includes(combination[1]) && player2cells.includes(combination[2])) {
+            return true;
+        }
+    }
+    return false;
+}
+function playerWinner() {
+    if(gamemode === "singleplayer") {
+        if (turn === player1) {
+            alert("Player 1 wins (X)!");
+        } else {
+            alert("Computer wins (O)!");
+        }
+    }
+    else if(gamemode === "localMultiplayer") {
+        if (turn === player1) {
+            alert("Player 1 wins (X)!");
+        } else {
+            alert("Player 2 wins (O)!");
+        }
+    }
+    resetGame();
+}
+function drawGame() {
+    alert("Draw!");
+    resetGame();
+}
