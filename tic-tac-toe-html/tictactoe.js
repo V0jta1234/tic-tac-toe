@@ -75,6 +75,7 @@ function computerMove() {
         // Speciální případ: pokud je to druhý tah hry a hráč začal rohem, počítač zvolí střed
         if (player1cells.length === 1 && player2cells.length === 0) {
             const corners = ["cell0", "cell2", "cell6", "cell8"];
+            // Hráč začal rohem
             if (corners.includes(player1cells[0]) && freeCells.includes("cell4")) {
                 const cellElement = document.getElementById("cell4");
                 cellElement.innerText = turn;
@@ -87,6 +88,25 @@ function computerMove() {
                     turn = player1;
                 }
                 return;
+            }
+            // Hráč začal středem
+            if (player1cells[0] === "cell4") {
+                // Vyber náhodný roh
+                const availableCorners = corners.filter(corner => freeCells.includes(corner));
+                if (availableCorners.length > 0) {
+                    const randomCorner = availableCorners[Math.floor(Math.random() * availableCorners.length)];
+                    const cellElement = document.getElementById(randomCorner);
+                    cellElement.innerText = turn;
+                    freeCells.splice(freeCells.indexOf(randomCorner), 1);
+                    player2cells.push(randomCorner);
+                    cellElement.classList.add("player2");
+                    if (checkWin()) {
+                        playerWinner();
+                    } else {
+                        turn = player1;
+                    }
+                    return;
+                }
             }
         }
         // 1. Pokus o výhru
