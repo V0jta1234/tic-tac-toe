@@ -1,3 +1,73 @@
+let socket;
+let room;
+
+function onlineMultiplayer() {
+    room = prompt("Zadejte název místnosti:");
+    if (!room) return;
+
+    document.getElementById("gameSelector").style.display = "none";
+    document.getElementById("gameContainer").style.display = "flex";
+    gamemode = "onlineMultiplayer";
+
+    socket = new WebSocket('ws://localhost:8080');
+
+    socket.onopen = () => {
+        socket.send(JSON.stringify({ type: 'join', room }));
+    };
+
+    socket.onmessage = (event) => {
+        const data = JSON.parse(event.data);
+
+        if (data.type === 'start') {
+            turn = data.turn;
+        }
+
+        if (data.type === 'move') {
+            const cellElement = document.getElementById(data.cell);
+            cellElement.innerText = data.turn;
+            freeCells.splice(freeCells.indexOf(data.cell), 1);
+
+            if (data.turn === player1) {
+                player1cells.push(data.cell);
+                cellElement.classList.add("player1");
+            } else {
+                player2cells.push(data.cell);
+                cellElement.classList.add("player2");
+            }
+
+            if (checkWin()) {
+                playerWinner();
+            } else if (freeCells.length === 0) {
+                drawGame();
+            } else {
+                turn = (turn === player1) ? player2 : player1;
+            }
+        }
+    };
+}
+
+function cellClicked(cell) {
+    if (gamemode === "onlineMultiplayer") {
+        const cellElement = document.getElementById("cell" + cell);
+        if (cellElement.innerText === "" && turn === player1) {
+            cellElement.innerText = turn;
+            freeCells.splice(freeCells.indexOf("cell" + cell), 1);
+            player1cells.push("cell" + cell);
+            cellElement.classList.add("player1");
+
+            if (checkWin()) {
+                playerWinner();
+            } else if (freeCells.length === 0) {
+                drawGame();
+            } else {
+                turn = player2;
+                socket.send(JSON.stringify({ type: 'move', room, cell: "cell" + cell, turn: player1 }));
+            }
+        }
+    } else {
+        // Původní logika pro singleplayer a localMultiplayer
+    }
+}
 //proměné
 var gamemode ="";
 var turn = "";
