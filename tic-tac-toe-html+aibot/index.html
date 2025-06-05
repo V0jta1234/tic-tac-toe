@@ -27,7 +27,11 @@
                 <button class="cell" id="cell7" onclick="cellClicked(7)"></button>
                 <button class="cell" id="cell8" onclick="cellClicked(8)"></button>
             </div>
-            <button class="resetButton" onclick="resetGame()">Resetovat hru</button>    
+            <div style="display:flex; flex-direction:column; margin-left:20px;">
+                <button onclick="selfPlayTrain(100, 0)">Autotrénink (100 her)</button>
+                <button onclick="downloadQTable()">Stáhnout Q-tabuli</button>
+                <input type="file" id="qtable-upload" style="margin-top:5px;" onchange="uploadQTable(event)">
+            </div>
         </div>
     </main>
     <script src="qlearning-tictactoe.js"></script>
